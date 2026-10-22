@@ -1,251 +1,180 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bosch Saha Portalı</title>
-    <!-- PWA / Mobil Ayarları -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#e21a1a">
     <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Bosch-logo.svg/512px-Bosch-logo.svg.png">
     <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Bosch-logo.svg/512px-Bosch-logo.svg.png">
     
-    <!-- React & Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    
     <style>
         body { user-select: none; -webkit-tap-highlight-color: transparent; }
-        .vibrate-anim { animation: pulse 0.3s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans antialiased">
 
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        // PWA Manifest Dinamik Oluşturma
-        const manifest = {
-            "name": "Bosch Saha Portalı",
-            "short_name": "Bosch Saha",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#ffffff",
-            "theme_color": "#e21a1a",
-            "icons": [{
-                "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Bosch-logo.svg/512px-Bosch-logo.svg.png",
-                "sizes": "512x512",
-                "type": "image/png"
-            }]
-        };
-        const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const manifestURL = URL.createObjectURL(blob);
-        document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${manifestURL}">`);
-
-        function App() {
-            // Rol: 1: Admin, 2: Müdür, 3: KAM, 4: Süpervizör, 5: Kullanıcı
-            const [role, setRole] = useState(1);
-            const [activeTab, setActiveTab] = useState('home');
+    <div class="max-w-md mx-auto min-h-screen bg-white shadow-xl flex flex-col pb-20">
+        
+        <!-- ÜST BAR -->
+        <header class="bg-red-700 text-white p-4 flex justify-between items-center sticky top-0 z-50">
+            <div class="flex items-center gap-2">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Bosch-logo.svg/512px-Bosch-logo.svg.png" class="h-6 bg-white p-1 rounded" />
+                <span class="font-bold text-lg tracking-wide">BOSCH SAHA</span>
+            </div>
             
-            // Toggle İzinleri (Admin Kontrolü)
-            const [toggles, setToggles] = useState({
-                vardiya: true,
-                ciro: true,
-                personel: true,
-                sampiyonlar: true
-            });
+            <select id="roleSelect" onchange="changeRole()" class="bg-red-800 text-xs px-2 py-1 rounded border border-red-500 font-semibold text-white focus:outline-none">
+                <option value="1">1. Admin</option>
+                <option value="2">2. Müdür</option>
+                <option value="3">3. KAM</option>
+                <option value="4">4. Süpervizör</option>
+                <option value="5">5. Kullanıcı</option>
+            </select>
+        </header>
 
-            // Demo Verileri
-            const [leaves, setLeaves] = useState([
-                { id: 1, user: 'Mert Yılmaz', type: 'Yıllık İzin', dates: '24-28 Ekim', status: 'Beklet' },
-                { id: 2, user: 'Ayşe Kaya', type: 'Mazeret İzni', dates: '25 Ekim', status: 'Onayla' }
-            ]);
+        <!-- YÜKLEME BANNER -->
+        <div class="bg-slate-800 text-white text-xs p-2 text-center flex justify-between items-center px-4">
+            <span>📲 Bosch Uygulamasını Yükle</span>
+            <button onclick="alert('Tarayıcı menüsünden (üç nokta) Ana Ekrana Ekle seçeneğine basınız.')" class="bg-red-600 px-2 py-0.5 rounded font-bold">YÜKLE</button>
+        </div>
 
-            const [complaints, setComplaints] = useState([
-                { id: 1, text: 'Mağaza içi havalandırma yetersiz.', isAnon: true, author: 'Ahmet Demir (Gizli)' }
-            ]);
-
-            const [messages, setMessages] = useState([
-                { id: 1, user: 'Sibel K.', text: 'Herkese iyi çalışmalar dilerim!' }
-            ]);
-            const [newMessage, setNewMessage] = useState('');
-
-            // Titret
-            const triggerVibrate = () => {
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                alert("📳 Titreşim Gönderildi!");
-            };
-
-            return (
-                <div class="max-w-md mx-auto min-h-screen bg-white shadow-xl flex flex-col pb-20">
-                    
-                    <!-- ÜST BAR -->
-                    <header class="bg-red-700 text-white p-4 flex justify-between items-center sticky top-0 z-50">
-                        <div class="flex items-center gap-2">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Bosch-logo.svg/512px-Bosch-logo.svg.png" class="h-6 bg-white p-1 rounded" />
-                            <span class="font-bold text-lg tracking-wide">BOSCH SAHA</span>
-                        </div>
-                        
-                        <!-- ROL SEÇİCİ -->
-                        <select 
-                            value={role} 
-                            onChange={(e) => setRole(Number(e.target.value))}
-                            class="bg-red-800 text-xs px-2 py-1 rounded border border-red-500 font-semibold text-white focus:outline-none"
-                        >
-                            <option value={1}>1. Admin</option>
-                            <option value={2}>2. Müdür</option>
-                            <option value={3}>3. KAM</option>
-                            <option value={4}>4. Süpervizör</option>
-                            <option value={5}>5. Kullanıcı</option>
-                        </select>
-                    </header>
-
-                    <!-- PWA YÜKLEME İLETIŞIMI -->
-                    <div class="bg-slate-800 text-white text-xs p-2 text-center flex justify-between items-center px-4">
-                        <span>📲 Uygulamayı Ana Ekrana Ekle</span>
-                        <button onclick="alert('Tarayıcı menüsünden Ana Ekrana Ekle seçeneğine basınız.')" class="bg-red-600 px-2 py-0.5 rounded font-bold">YÜKLE</button>
-                    </div>
-
-                    <!-- İÇERİK -->
-                    <main class="p-4 flex-1">
-                        
-                        {/* ROLLER & YETKİ PANELİ (SADECE ADMİN) */}
-                        {role === 1 && activeTab === 'home' && (
-                            <div class="bg-red-50 border border-red-200 p-3 rounded-lg mb-4">
-                                <h3 class="font-bold text-red-800 text-sm mb-2 flex items-center gap-1">
-                                    <i class="fa-solid fa-sliders"></i> Modül Aç / Kapa Yetkileri (Admin)
-                                </h3>
-                                <div class="grid grid-cols-2 gap-2 text-xs">
-                                    {Object.keys(toggles).map(key => (
-                                        <button 
-                                            key={key}
-                                            onClick={() => setToggles({...toggles, [key]: !toggles[key]})}
-                                            class={`p-2 rounded font-bold text-left flex justify-between items-center ${toggles[key] ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-700'}`}
-                                        >
-                                            <span class="capitalize">{key}</span>
-                                            <span>{toggles[key] ? 'AÇIK' : 'KAPALI'}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* TAB: ANA SAYFA / İZİNLER */}
-                        {activeTab === 'home' && (
-                            <div class="space-y-4">
-                                <div class="bg-slate-100 p-3 rounded-lg">
-                                    <h2 class="font-bold text-sm text-slate-700 mb-2">📅 İzin Talepleri</h2>
-                                    {leaves.map(l => (
-                                        <div key={l.id} class="bg-white p-2 rounded shadow-sm text-xs mb-2 flex justify-between items-center">
-                                            <div>
-                                                <p class="font-bold text-slate-800">{l.user}</p>
-                                                <p class="text-slate-500">{l.type} ({l.dates})</p>
-                                            </div>
-                                            {role <= 4 ? (
-                                                <select 
-                                                    value={l.status}
-                                                    onChange={(e) => {
-                                                        const updated = leaves.map(item => item.id === l.id ? {...item, status: e.target.value} : item);
-                                                        setLeaves(updated);
-                                                    }}
-                                                    class="border rounded p-1 font-bold text-xs"
-                                                >
-                                                    <option value="Onayla">🟢 Onayla</option>
-                                                    <option value="Beklet">🟡 Beklet</option>
-                                                    <option value="Reddet">🔴 Reddet</option>
-                                                </select>
-                                            ) : (
-                                                <span class="font-bold px-2 py-1 rounded bg-slate-200">{l.status}</span>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* ŞİKAYET KUTUSU */}
-                                <div class="bg-slate-100 p-3 rounded-lg">
-                                    <h2 class="font-bold text-sm text-slate-700 mb-2">📥 Dilek & Anonim Şikayet</h2>
-                                    {complaints.map(c => (
-                                        <div key={c.id} class="bg-white p-2 rounded shadow-sm text-xs mb-2">
-                                            <p class="text-slate-800">{c.text}</p>
-                                            <p class="text-slate-400 text-[10px] mt-1">
-                                                Gönderen: {role === 1 ? <strong class="text-red-600">{c.author} (Sadece Sen Görüyorsun)</strong> : 'Anonim Kullanıcı'}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* TAB: SOHBET & TİTRET */}
-                        {activeTab === 'chat' && (
-                            <div class="flex flex-col h-full space-y-3">
-                                <button 
-                                    onClick={triggerVibrate}
-                                    class="bg-amber-500 text-white font-bold p-3 rounded-lg shadow-lg text-center vibrate-anim flex items-center justify-center gap-2"
-                                >
-                                    <i class="fa-solid fa-mobile-retro text-xl"></i>
-                                    <span>HERKESİ TİTRET (PING) 📳</span>
-                                </button>
-
-                                <div class="bg-slate-100 p-3 rounded-lg flex-1 min-h-[250px] space-y-2">
-                                    <h2 class="font-bold text-sm text-slate-700">💬 Genel Sohbet (Dertleşme)</h2>
-                                    {messages.map(m => (
-                                        <div key={m.id} class="bg-white p-2 rounded shadow-sm text-xs">
-                                            <span class="font-bold text-red-700">{m.user}: </span>
-                                            <span>{m.text}</span>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div class="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Mesaj yazın..."
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                        class="flex-1 border rounded p-2 text-xs"
-                                    />
-                                    <button 
-                                        onClick={() => {
-                                            if(newMessage) {
-                                                setMessages([...messages, { id: Date.now(), user: role === 1 ? 'Admin' : 'Saha Personeli', text: newMessage }]);
-                                                setNewMessage('');
-                                            }
-                                        }}
-                                        class="bg-red-600 text-white px-4 rounded font-bold text-xs"
-                                    >
-                                        Gönder
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                    </main>
-
-                    <!-- ALT MENÜ -->
-                    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t flex justify-around p-2 text-xs font-semibold text-slate-600 z-50">
-                        <button onClick={() => setActiveTab('home')} class={`flex flex-col items-center ${activeTab === 'home' ? 'text-red-600' : ''}`}>
-                            <i class="fa-solid fa-house text-lg"></i>
-                            <span>Ana Sayfa</span>
-                        </button>
-                        <button onClick={() => setActiveTab('chat')} class={`flex flex-col items-center ${activeTab === 'chat' ? 'text-red-600' : ''}`}>
-                            <i class="fa-solid fa-comments text-lg"></i>
-                            <span>Sohbet & Ping</span>
-                        </button>
-                    </nav>
-
+        <!-- İÇERİK -->
+        <main class="p-4 flex-1 space-y-4">
+            
+            <!-- ADMIN YETKİ PANELİ -->
+            <div id="adminPanel" class="bg-red-50 border border-red-200 p-3 rounded-lg">
+                <h3 class="font-bold text-red-800 text-sm mb-2 flex items-center gap-1">
+                    <i class="fa-solid fa-sliders"></i> Modül Aç / Kapa (Admin)
+                </h3>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="toggleBtn(this)" class="p-2 rounded font-bold bg-green-600 text-white flex justify-between">Vardiya <span>AÇIK</span></button>
+                    <button onclick="toggleBtn(this)" class="p-2 rounded font-bold bg-green-600 text-white flex justify-between">Ciro Girişi <span>AÇIK</span></button>
+                    <button onclick="toggleBtn(this)" class="p-2 rounded font-bold bg-green-600 text-white flex justify-between">Personel <span>AÇIK</span></button>
+                    <button onclick="toggleBtn(this)" class="p-2 rounded font-bold bg-green-600 text-white flex justify-between">Şampiyonlar <span>AÇIK</span></button>
                 </div>
-            );
+            </div>
+
+            <!-- İZİNLER -->
+            <div class="bg-slate-100 p-3 rounded-lg">
+                <h2 class="font-bold text-sm text-slate-700 mb-2">📅 İzin Talepleri</h2>
+                
+                <div class="bg-white p-2 rounded shadow-sm text-xs mb-2 flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-slate-800">Mert Yılmaz (Ankara Koçtaş)</p>
+                        <p class="text-slate-500">Yıllık İzin (24-28 Ekim)</p>
+                    </div>
+                    <select class="border rounded p-1 font-bold text-xs bg-slate-50">
+                        <option>🟡 Beklet</option>
+                        <option>🟢 Onayla</option>
+                        <option>🔴 Reddet</option>
+                    </select>
+                </div>
+
+                <div class="bg-white p-2 rounded shadow-sm text-xs flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-slate-800">Ayşe Kaya (İstanbul Bauhaus)</p>
+                        <p class="text-slate-500">Mazeret İzni (25 Ekim)</p>
+                    </div>
+                    <select class="border rounded p-1 font-bold text-xs bg-slate-50">
+                        <option>🟢 Onayla</option>
+                        <option>🟡 Beklet</option>
+                        <option>🔴 Reddet</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- TİTRET VE SOHBET -->
+            <div class="bg-slate-100 p-3 rounded-lg space-y-3">
+                <h2 class="font-bold text-sm text-slate-700">💬 Saha İletişim & Ping</h2>
+                
+                <button onclick="pingAll()" class="w-full bg-amber-500 active:bg-amber-600 text-white font-bold p-3 rounded-lg shadow text-center flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-mobile-retro text-lg"></i>
+                    <span>HERKESİ TİTRET (PING) 📳</span>
+                </button>
+
+                <div id="chatBox" class="bg-white p-2 rounded h-32 overflow-y-auto text-xs space-y-1 border">
+                    <p><strong class="text-red-700">Sibel K.:</strong> Herkese iyi çalışmalar dilerim!</p>
+                    <p><strong class="text-blue-700">Mert Y.:</strong> Kampanya stokları güncellendi mi?</p>
+                </div>
+
+                <div class="flex gap-2">
+                    <input id="msgInput" type="text" placeholder="Mesaj yazın..." class="flex-1 border rounded p-2 text-xs">
+                    <button onclick="sendMsg()" class="bg-red-600 text-white px-4 rounded font-bold text-xs">Gönder</button>
+                </div>
+            </div>
+
+            <!-- GİZLİ ŞİKAYET KUTUSU -->
+            <div class="bg-slate-100 p-3 rounded-lg">
+                <h2 class="font-bold text-sm text-slate-700 mb-2">📥 Dilek & Anonim Şikayet</h2>
+                <div class="bg-white p-2 rounded shadow-sm text-xs">
+                    <p class="text-slate-800">"Mağaza içi havalandırma yetersiz kalıyor."</p>
+                    <p id="authorText" class="text-red-600 font-bold text-[10px] mt-1">Gönderen: Ahmet Demir (Sadece Admin Görebilir)</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ALT MENÜ -->
+        <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t flex justify-around p-2 text-xs font-semibold text-slate-600 z-50">
+            <button class="flex flex-col items-center text-red-600">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span>Ana Sayfa</span>
+            </button>
+            <button onclick="alert('Sohbet bölümü yukarıdadır.')" class="flex flex-col items-center">
+                <i class="fa-solid fa-comments text-lg"></i>
+                <span>Sohbet</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script>
+        function changeRole() {
+            var role = document.getElementById('roleSelect').value;
+            var adminPanel = document.getElementById('adminPanel');
+            var authorText = document.getElementById('authorText');
+
+            if(role == "1") {
+                adminPanel.style.display = "block";
+                authorText.innerText = "Gönderen: Ahmet Demir (Sadece Admin Görebilir)";
+            } else {
+                adminPanel.style.display = "none";
+                authorText.innerText = "Gönderen: Anonim Kullanıcı";
+            }
         }
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        function toggleBtn(btn) {
+            if(btn.classList.contains('bg-green-600')) {
+                btn.classList.remove('bg-green-600');
+                btn.classList.add('bg-gray-400');
+                btn.querySelector('span').innerText = 'KAPALI';
+            } else {
+                btn.classList.remove('bg-gray-400');
+                btn.classList.add('bg-green-600');
+                btn.querySelector('span').innerText = 'AÇIK';
+            }
+        }
+
+        function pingAll() {
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            alert("📳 Titreşim Gönderildi!");
+        }
+
+        function sendMsg() {
+            var input = document.getElementById('msgInput');
+            var chat = document.getElementById('chatBox');
+            if(input.value.trim() !== '') {
+                var p = document.createElement('p');
+                p.innerHTML = '<strong class="text-red-700">Sen:</strong> ' + input.value;
+                chat.appendChild(p);
+                input.value = '';
+                chat.scrollTop = chat.scrollHeight;
+            }
+        }
     </script>
 </body>
 </html>
